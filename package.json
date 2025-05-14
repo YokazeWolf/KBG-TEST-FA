@@ -1,0 +1,11 @@
+{
+  "name": "zoi-detect",
+  "version": "1.0.0",
+  "description": "A simple app to detect ZoI in a petri dish",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "FrankA777",
+  "license": "ISC"
+}
