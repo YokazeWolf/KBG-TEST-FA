@@ -16,7 +16,6 @@ export const useMainStore = defineStore('main', {
 
             try {
                 const response = await ZoIUploadService.uploadImage(file);
-                // Only set uploadedImageUrl if present
                 if (response.data.imageUrl) {
                     this.uploadedImageUrl = response.data.imageUrl;
                 }

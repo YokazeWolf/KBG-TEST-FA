@@ -35,7 +35,13 @@
     return res.status(400).send('Invalid file type. Only PNG/JPG allowed.');
   }
 
-  const uploadPath = path.join(__dirname, '../..', 'storage', file.name);
+  const storageDir = path.join(__dirname, '../..', 'storage');
+  const uploadPath = path.join(storageDir, file.name);
+
+  // in case the directory doesn't exist, create it
+  if (!fs.existsSync(storageDir)) {
+    fs.mkdirSync(storageDir, { recursive: true });
+  }
 
   file.mv(uploadPath, (err) => {
     if (err) {

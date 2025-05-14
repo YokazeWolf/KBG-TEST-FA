@@ -98,12 +98,14 @@ const uploadFile = async () => {
 
     try {
         checkZoiResult.value = await mainStore.checkZoI(file.value)
+        // set values from request, if any is not present, set default
         if (checkZoiResult.value) {
             uploadMessage.value = checkZoiResult.value.message || ''
             uploadedFilename.value = checkZoiResult.value.filename || ''
             zoiInfo.value = checkZoiResult.value.zoi || []
         }
     } catch (error) {
+        // if there is no data for the image, show a warning
         if (error.response && error.response.status === 404) {
             $q.notify({
                 type: 'warning',
