@@ -26,9 +26,9 @@
                 <div v-for="(disk, idx) in zoiInfo" :key="idx" class="zoi-disk q-mb-sm">
                     <div><strong>Disk {{ idx + 1 }}</strong></div>
                     <div v-if="disk.center_x !== undefined && disk.center_y !== undefined">
-                        X: {{ disk.center_x }} px, Y: {{ disk.center_y }} px
+                        X: {{ disk.center_x.toFixed(2) }} px, Y: {{ disk.center_y.toFixed(2) }} px
                     </div>
-                    <div>Diameter: {{ disk.diameter_mm }}</div>
+                    <div>Diameter: {{ disk.diameter_mm.toFixed(2) }} mm</div>
                 </div>
             </div>
             <div v-else class="placeholder text-grey">
@@ -58,6 +58,8 @@ import { ref, watch, nextTick, computed } from 'vue'
 import useMainStore from '../stores/main.store'
 import { useQuasar } from 'quasar'
 
+// variables
+
 const $q = useQuasar()
 
 const file = ref(null)
@@ -77,6 +79,7 @@ const cacheKey  = ref(Date.now())
 
 const mainStore = useMainStore()
 
+// methods
 
 const clearFile = () => {
     file.value = null

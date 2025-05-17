@@ -8,7 +8,7 @@ export const checkPythonVersion = async (): Promise<string | null> => {
         const commands = ['py --version', 'python --version', 'python3 --version'];
         for (const cmd of commands) {
             try {
-                const { stdout, stderr } = await execPromise(cmd);
+                const { stdout, stderr } = await execPromise(cmd, { timeout: 5000 });
 
                 // Some Python versions print version info to stderr
                 const output = stdout || stderr;

@@ -29,7 +29,6 @@ console.log(`Storage directory: ${STORAGE_DIR}`);
 console.log(`Result directory: ${RESULT_DIR}`);
 
 // Serve static files from the storage/result directory using the absolute path
-// Make sure the URL path matches what you want to use in the frontend (e.g. /results)
 app.use('/result', express.static(RESULT_DIR));
 
 // Usually I'd make a controller folder but since its only two endpoints, I'll just put it here.
@@ -69,7 +68,7 @@ app.post('/v1/zoiUpload', (req: any, res: any) => {
     // if pythonBin is false, it means that the python executable was not found
     if (!pythonBin) {
       console.error('Python executable not found. Set PYTHON_PATH or install Python.');
-      return res.status(500).json({ error: 'Python executable not found. Set PYTHON_PATH or install Python.', code: "py_not_found" });
+      return res.status(500);
     }
 
     console.log(`Executing: ${pythonBin} ${pythonScript} ${uploadPath}`);
@@ -168,7 +167,7 @@ app.post('/v1/checkZoI', (req: any, res: any) => {
       .map((_: any, idx: number) => {
         const val = (fields[idx + 1] || '').trim();
         if (val) {
-          return { diameter_mm: val };
+          return { diameter_mm: Number(val.replace('mm', '')) };
         }
         return null;
       })
