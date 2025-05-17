@@ -54,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, computed } from 'vue'
 import useMainStore from '../stores/main.store'
 import { useQuasar } from 'quasar'
 

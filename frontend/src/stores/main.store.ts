@@ -32,7 +32,7 @@ export const useMainStore = defineStore('main', {
                 console.error('Upload error:', error);
                 this.uploadError = error.message || 'An error occurred during upload.';
                 this.uploadStatus = 'error';
-                return null;
+                throw error;
             }
         },
         // Check ZoI with CSV (Excel file converted to CSV) (deprecated)
