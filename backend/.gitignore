@@ -1,0 +1,7 @@
+# i absolutely forgot to ignore node_modules (repo sad)
+node_modules/
+# build
+build
+dist
+storage/
+

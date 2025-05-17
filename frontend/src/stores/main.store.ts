@@ -6,16 +6,22 @@ export const useMainStore = defineStore('main', {
         uploadStatus: '' as 'idle' | 'uploading' | 'success' | 'error',
         uploadError: null as string | null,
         uploadedImageUrl: null as string | null,
+        useOpenCV: false,
     }),
     actions: {
-        // Upload ZoI image and analyze with OpenCV (WIP)
+        // Upload ZoI image to backend (using either OpenCV or compare to CSV)
         async uploadZoIimage(file: File) {
             this.uploadStatus = 'uploading';
             this.uploadError = null;
             this.uploadedImageUrl = null;
 
             try {
-                const response = await ZoIUploadService.uploadImage(file);
+                let response;
+                if(this.useOpenCV) {
+                    response = await ZoIUploadService.uploadImage(file);
+                } else {
+                    response = await ZoIUploadService.checkZoI(file);   
+                }
                 if (response.data.imageUrl) {
                     this.uploadedImageUrl = response.data.imageUrl;
                 }
@@ -29,7 +35,7 @@ export const useMainStore = defineStore('main', {
                 return null;
             }
         },
-        // Check ZoI with CSV (Excel file converted to CSV)
+        // Check ZoI with CSV (Excel file converted to CSV) (deprecated)
         async checkZoI(file: File) {
             try {
                 const response = await ZoIUploadService.checkZoI(file);
@@ -37,6 +43,10 @@ export const useMainStore = defineStore('main', {
             } catch (error: any) {
                 throw error;
             }
+        },
+        // Set OpenCV usage
+        setUseOpenCV(useOpenCV: boolean) {
+            this.useOpenCV = useOpenCV;
         }
     },
 });

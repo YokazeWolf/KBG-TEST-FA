@@ -1,7 +1,13 @@
 # KBG-TEST-FA
 This is a simple web app for a test.
 
-# Setup
+## Prerequisites
+
+- Node.js
+- Python 3.x
+- OpenCV (Install with `pip install opencv-python`)
+
+## Setup
 
 1. Clone the repository
 2. `cd frontend` and `npm install` to install dependencies
@@ -14,6 +20,24 @@ This is a simple web app for a test.
 8. Upload the petri pictures.
 9. Check the results.
 
-**Extra**: If you want to check the OpenCV implementation (not fully working) some workaround is needed, but you should point to `checkZoI` instead of `zoiUpload`, as well as pip install opencv-python to install the OpenCV library.
+**Extra**
 
-I also left some png leftover from my tests with the OpenCV implementation, but they are not needed for the app to work.
+P.S.: If it wasn't clear enough, the OpenCV implementation was developed with the help of AI, and not flawless. Currently a hit or miss. 
+
+There's also a toggle to switch between the AI and OpenCV implementations. The AI implementation is more reliable, but slower. The OpenCV implementation is slower but done in real time. Keep the switch off to use the CSV reference instead (faster, reliable). 
+
+Any images that are not in the CSV reference will be ignored and an error will be shown in the frontend.
+
+### Troubleshooting
+
+- If you have any issues, please check the console for errors. If you see an error related to CORS, please make sure that the backend is running.
+
+- If you see any errors related to python or OpenCV, please make sure that you have python and openCV installed. You can install OpenCV with the following command:
+```bash
+pip install opencv-python
+```
+
+- I'm not using ts-node for the backend so instead I use `tsx` to run the backend. It should be included in the package.json, if it's not, please install it with the following command:
+```bash
+npm install tsx --save-dev
+```

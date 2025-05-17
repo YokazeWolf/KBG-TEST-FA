@@ -1,18 +1,20 @@
 <template>
     <div class="container q-pa-md">
-        <div class="image-frame q-mb-md" ref="imageFrameRef">
-            <q-img
-                v-if="imageUrl"
-                :src="imageUrl"
-                class="image"
-                spinner-color="primary"
-                :ratio="null"
-                fit="contain"
-                @load="onImageLoad"
-                ref="qImgRef"
-            />
-            <span v-else class="placeholder text-grey">Image will appear here</span>
+        <div class="imgs flex row q-mb-md">
+            <div class="image-frame" ref="imageFrameRef">
+                <q-img v-if="imageUrl" :src="imageUrl" class="image" spinner-color="primary" :ratio="null" fit="contain"
+                    ref="inputImgRef" />
+                <span v-else class="placeholder text-grey">Image will appear here</span>
+            </div>
+            <div class="image-frame q-ml-md" ref="resultImageFrameRef" v-if="useOpenCV">
+                <q-img v-if="resultImageUrl" :src="`${resultImageUrl}?t=${cacheKey}`" class="image"
+                    ref="resultImgRef"
+                    spinner-color="primary" :ratio="null" fit="contain" @error="handleImageError" />
+                <span v-else class="placeholder text-grey">Result image will appear here</span>
+            </div>
         </div>
+
+
         <div class="info-panel">
             <div v-if="uploadMessage" class="q-mb-sm">
                 <q-banner dense>{{ uploadMessage }}</q-banner>
@@ -37,25 +39,22 @@
             <q-file filled label="Select an image" accept="image/*" v-model="file" />
         </div>
         <div class="controls">
-            <q-btn
-                class="q-mt-md"
-                label="Upload"
-                color="primary"
-                @click="uploadFile"
-                :disabled="!file"
-            />
-            <q-btn
-                class="q-mt-md q-ml-sm"
-                label="Clear"
-                color="negative"
-                @click="clearFile"
-            />
+            <q-btn class="q-mt-md" :loading="uploading" label="Upload" color="primary" @click="uploadFile" :disabled="!file" />
+            <q-btn class="q-mt-md q-ml-sm" label="Clear" color="negative" @click="clearFile" />
+            <q-toggle class="q-mt-md q-ml-sm" label="Use OpenCV (very experimental)" v-model="useOpenCV">
+                <q-tooltip anchor="top middle" self="bottom middle" :offset="[0, 10]" transition-show="scale"
+                    transition-hide="scale" transition-duration="200"
+                    :style="{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }">
+                    <span class="text-white">Use OpenCV to detect ZoI, otherwise load from csv.<br>This function is very experimental and not
+                        working properly currently.</span>
+                </q-tooltip>
+            </q-toggle>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
 import useMainStore from '../stores/main.store'
 import { useQuasar } from 'quasar'
 
@@ -63,14 +62,79 @@ const $q = useQuasar()
 
 const file = ref(null)
 const imageUrl = ref(null)
+const resultImageUrl = ref(null)
 const zoiInfo = ref([])
 const uploadMessage = ref('')
 const uploadedFilename = ref('')
-const qImgRef = ref(null)
+const inputImgRef = ref(null)
+const resultImgRef = ref(null)
 const checkZoiResult = ref(null)
 
-const mainStore = useMainStore();
+const useOpenCV = ref(false)
 
+// strictly for result image cache
+const cacheKey  = ref(Date.now())
+
+const mainStore = useMainStore()
+
+
+const clearFile = () => {
+    file.value = null
+    imageUrl.value = null
+    zoiInfo.value = []
+    uploadMessage.value = ''
+    uploadedFilename.value = ''
+    resultImageUrl.value = null
+}
+
+const uploadFile = async () => {
+    if (!file.value) return
+    resultImageUrl.value = null
+    cacheKey.value = Date.now()
+    try {
+        checkZoiResult.value = await mainStore.uploadZoIimage(file.value)
+        // set values from request, if any is not present, set default
+        if (checkZoiResult.value) {
+            uploadMessage.value = checkZoiResult.value.message || ''
+            uploadedFilename.value = checkZoiResult.value.filename || ''
+            zoiInfo.value = checkZoiResult.value.zoi || []
+            
+            // Set the result image URL directly from response
+            if (checkZoiResult.value.imageUrl) {
+                resultImageUrl.value = checkZoiResult.value.imageUrl
+                cacheKey.value = Date.now()
+            } else {
+                resultImageUrl.value = null;
+            }
+        }
+    } catch (error) {
+        // if there is no data for the image, show a warning
+        if (error.response && error.response.status === 404) {
+            $q.notify({
+                type: 'warning',
+                message: 'No information for this image'
+            })
+        } else {
+            console.error('Error checking ZoI:', error)
+        }
+    }
+}
+
+// computed
+const uploading = computed(() => {
+    return mainStore.uploadStatus === 'uploading'
+})
+
+// image error handling
+const handleImageError = (event) => {
+    console.error("Failed to load image:", event)
+    $q.notify({
+        type: 'negative',
+        message: 'Failed to load result image'
+    });
+}
+
+// watch
 watch(file, (val) => {
     if (val && val instanceof File) {
         imageUrl.value = URL.createObjectURL(val)
@@ -85,37 +149,15 @@ watch(file, (val) => {
     }
 })
 
-const clearFile = () => {
-    file.value = null
-    imageUrl.value = null
-    zoiInfo.value = []
-    uploadMessage.value = ''
-    uploadedFilename.value = ''
-}
+watch(useOpenCV, (val) => {
+    if (val) {
+        mainStore.setUseOpenCV(true)
+    } else {
+        mainStore.setUseOpenCV(false)
 
-const uploadFile = async () => {
-    if (!file.value) return
-
-    try {
-        checkZoiResult.value = await mainStore.checkZoI(file.value)
-        // set values from request, if any is not present, set default
-        if (checkZoiResult.value) {
-            uploadMessage.value = checkZoiResult.value.message || ''
-            uploadedFilename.value = checkZoiResult.value.filename || ''
-            zoiInfo.value = checkZoiResult.value.zoi || []
-        }
-    } catch (error) {
-        // if there is no data for the image, show a warning
-        if (error.response && error.response.status === 404) {
-            $q.notify({
-                type: 'warning',
-                message: 'No information for this image'
-            })
-        } else {
-            console.error('Error checking ZoI:', error)
-        }
     }
-}
+})
+
 
 </script>
 
